@@ -15,6 +15,8 @@ If you don't have one and are interesting with it, please contact with us by e-m
 
 ### Install LIPS 3D depth camera SDK ###
 
+* Download SDK from [LIPS SDK] (http://www.lips-hci.com/products/sdk/)
+
 * Install wizard will notify to install OpenNI if OpenNI is not installed well.
 
 ### Download LIPS Sample Code ###
