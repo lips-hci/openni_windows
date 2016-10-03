@@ -35,7 +35,13 @@ git clone https://github.com/lips-hci/openni_windows.git LIPS_Sample
 #### Build Samples ####
 ##### NiRecorder #####
 
-* Launch Visual Studio IDE by clicking NiRecorder.sln.
+* Launch Visual Studio IDE by clicking NiRecorder\NiRecorder.sln.
+* The example is created with Visual Studio 2012. You might be hinted that Visual Studio would like to update some files to adapt the new tool set if your Visual Studio version is higher than Visual Studio 2012.
+
+##### NiSimpleViewer #####
+
+* Install OpenCV 2.4.11 (or later). (Refer [OpenCV.org] (http://opencv.org/downloads.html). Assume you downloaded and extracted to C:\opencv
+* Launch Visual Studio IDE by clicking NiSimpleViewer\NiSimpleViewer.sln.
 * The example is created with Visual Studio 2012. You might be hinted that Visual Studio would like to update some files to adapt the new tool set if your Visual Studio version is higher than Visual Studio 2012.
 
 #### Build your own application ####
