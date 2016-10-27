@@ -13,6 +13,10 @@ If you don't have one and are interesting with it, please contact with us by e-m
 
 * Windows 7 or later
 
+### Install Visual C++ Redistributable for Visual Studio 2012
+
+* Download runtime component and install it from [Microsoft website] (https://www.microsoft.com/en-us/download/details.aspx?id=30679)
+
 ### Install LIPS 3D depth camera SDK ###
 
 * Download SDK from [LIPS SDK] (http://www.lips-hci.com/products/sdk/)
