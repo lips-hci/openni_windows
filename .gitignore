@@ -1,0 +1,10 @@
+Debug/
+x64/
+*.user
+*.opensdf
+*.sdf
+
+*.suo
+
+*.filters
+
