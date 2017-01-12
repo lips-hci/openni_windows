@@ -3,6 +3,9 @@
 #include <iostream>
 #include <winsock2.h>
 #include <Ws2tcpip.h>
+#if defined(COMPRESS)
+#include "zlib.h"
+#endif
 
 #if defined(RES_VGA)
 #define IMG_WIDTH 640
@@ -16,6 +19,9 @@
 #define CLIENT_PORT 5567
 #define PKT_SIZE 51200
 #define FID_SIZE 11
+#if defined(COMPRESS)
+#define PAYLOAD_SIZE 6
+#endif
 
 using namespace std;
 using namespace xn;
@@ -41,10 +47,17 @@ int main( int argc, char* argv[] )
     SOCKET socket_fd = INVALID_SOCKET;
     struct sockaddr_in client_addr;
 
+    char frame_id[FID_SIZE] = {0};
+
     int length;
+
+#if !defined(COMPRESS)
     char *data1;
     char *data2;
     char *data3;
+    data1 = (char*)malloc((PKT_SIZE + FID_SIZE)*sizeof(char));
+    data2 = (char*)malloc((PKT_SIZE + FID_SIZE)*sizeof(char));
+    data3 = (char*)malloc((PKT_SIZE + FID_SIZE)*sizeof(char));
 #if defined(RES_VGA)
     char *data4;
     char *data5;
@@ -55,13 +68,6 @@ int main( int argc, char* argv[] )
     char *data10;
     char *data11;
     char *data12;
-#endif
-    char frame_id[FID_SIZE] = {0};
-   
-    data1 = (char*)malloc((PKT_SIZE + FID_SIZE)*sizeof(char));
-    data2 = (char*)malloc((PKT_SIZE + FID_SIZE)*sizeof(char));
-    data3 = (char*)malloc((PKT_SIZE + FID_SIZE)*sizeof(char));
-#if defined(RES_VGA)
     data4 = (char*)malloc((PKT_SIZE + FID_SIZE)*sizeof(char));
     data5 = (char*)malloc((PKT_SIZE + FID_SIZE)*sizeof(char));
     data6 = (char*)malloc((PKT_SIZE + FID_SIZE)*sizeof(char));
@@ -71,6 +77,11 @@ int main( int argc, char* argv[] )
     data10 = (char*)malloc((PKT_SIZE + FID_SIZE)*sizeof(char));
     data11 = (char*)malloc((PKT_SIZE + FID_SIZE)*sizeof(char));
     data12 = (char*)malloc((PKT_SIZE + FID_SIZE)*sizeof(char));
+#endif
+#else
+    char *zData1;
+    zData1 = (char*)malloc((PKT_SIZE + FID_SIZE + PAYLOAD_SIZE + 1)*sizeof(char));
+    char payload_size[PAYLOAD_SIZE] = {0};
 #endif
 
     // 2. Prepare UDP socket
@@ -105,9 +116,17 @@ int main( int argc, char* argv[] )
             mContext.WaitOneUpdateAll(mDepthGen);
             mDepthGen.GetMetaData(mDepthMD);
             sprintf(frame_id, "%d", mDepthMD.FrameID());
+            length = sizeof(client_addr);
+#if !defined(COMPRESS)
             *data1 = 'A';
             *data2 = 'B';
             *data3 = 'C';
+            memcpy(data1 + 1, frame_id, FID_SIZE);
+            memcpy(data1 + FID_SIZE, mDepthMD.Data(), PKT_SIZE);
+            memcpy(data2 + 1, frame_id, FID_SIZE);
+            memcpy(data2 + FID_SIZE, mDepthMD.Data() + PKT_SIZE/2, PKT_SIZE);
+            memcpy(data3 + 1, frame_id, FID_SIZE);
+            memcpy(data3 + FID_SIZE, mDepthMD.Data() + PKT_SIZE, PKT_SIZE);
 #if defined(RES_VGA)
             *data4 = 'D';
             *data5 = 'E';
@@ -118,14 +137,6 @@ int main( int argc, char* argv[] )
             *data10 = 'J';
             *data11 = 'K';
             *data12 = 'L';
-#endif
-            memcpy(data1 + 1, frame_id, FID_SIZE);
-            memcpy(data1 + FID_SIZE, mDepthMD.Data(), PKT_SIZE);
-            memcpy(data2 + 1, frame_id, FID_SIZE);
-            memcpy(data2 + FID_SIZE, mDepthMD.Data() + PKT_SIZE/2, PKT_SIZE);
-            memcpy(data3 + 1, frame_id, FID_SIZE);
-            memcpy(data3 + FID_SIZE, mDepthMD.Data() + PKT_SIZE, PKT_SIZE);
-#if defined(RES_VGA)
             memcpy(data4 + 1, frame_id, FID_SIZE);
             memcpy(data4 + FID_SIZE, mDepthMD.Data() + PKT_SIZE + PKT_SIZE/2, PKT_SIZE);
             memcpy(data5 + 1, frame_id, FID_SIZE);
@@ -145,7 +156,77 @@ int main( int argc, char* argv[] )
             memcpy(data12 + 1, frame_id, FID_SIZE);
             memcpy(data12 + FID_SIZE, mDepthMD.Data() + 5 * PKT_SIZE + PKT_SIZE/2, PKT_SIZE);
 #endif
-            length = sizeof(client_addr);
+#else
+            int err;
+            Byte *zData;
+            zData = (Byte*)calloc(IMG_WIDTH*IMG_HEIGHT*2, 1);
+            uLong len = (uLong)(IMG_WIDTH*IMG_HEIGHT*2);
+            uLong zDataLen = (uLong)(IMG_WIDTH*IMG_HEIGHT*2);
+            err = compress2(zData, &zDataLen, (const Bytef*)mDepthMD.Data(), len, Z_BEST_COMPRESSION);
+            if (err != Z_OK) {
+                switch (err) {
+                    case Z_ERRNO:
+                        cout << "frame_id : " << frame_id << " compress error: Z_ERRNO" << endl;
+                        break;
+                    case Z_STREAM_ERROR:
+                        cout << "frame_id : " << frame_id << " compress error: Z_STREAM_ERROR" << endl;
+                        break;
+                    case Z_DATA_ERROR:
+                        cout << "frame_id : " << frame_id << " compress error: Z_DATA_ERROR" << endl;
+                        break;
+                    case Z_MEM_ERROR:
+                        cout << "frame_id : " << frame_id << " compress error: Z_MEM_ERROR" << endl;
+                        break;
+                    case Z_BUF_ERROR:
+                        cout << "frame_id : " << frame_id << " compress error: Z_BUF_ERROR" << endl;
+                        break;
+                    case Z_VERSION_ERROR:
+                        cout << "frame_id : " << frame_id << " compress error: Z_VERSION_ERROR" << endl;
+                        break;
+                    default:
+                        cout << "frame_id : " << frame_id << " compress error: " << err << endl;
+                        break;
+                }
+                break;
+            } else {
+                cout << "frame_id : " << frame_id << ", zDataLen : " << zDataLen << ", mDepthMD.DataSize() : " << mDepthMD.DataSize() << endl;
+                const char payload_offset[] = "ABCDEFGHIJKL";
+                int index = 0;
+                int add = 0;
+                int pkt_count;
+                if ( zDataLen % PKT_SIZE) {
+                    pkt_count = zDataLen / PKT_SIZE + 1;
+                } else {
+                    pkt_count = zDataLen / PKT_SIZE;
+                }
+                while(zDataLen > 0) {
+                    memset(zData1, 0, PKT_SIZE + FID_SIZE + PAYLOAD_SIZE + 1);
+                    if (zDataLen > PKT_SIZE) {
+                        sprintf(payload_size, "%d", PKT_SIZE);
+                        memset(zData1, *(payload_offset + index), 1);
+                        memset(zData1 + 1, *(payload_offset + pkt_count - 1), 1);
+                        std::memcpy(zData1 + 2, frame_id, FID_SIZE);
+                        std::memcpy(zData1 + FID_SIZE + 1, &payload_size, PAYLOAD_SIZE);
+                        std::memcpy(zData1 + FID_SIZE + PAYLOAD_SIZE + 1, zData + add, PKT_SIZE);
+                        zDataLen -= PKT_SIZE;
+                        add += PKT_SIZE;
+                    } else {
+                        sprintf(payload_size, "%d", (int)zDataLen);
+                        memset(zData1, *(payload_offset + index), 1);
+                        memset(zData1 + 1, *(payload_offset + pkt_count - 1), 1);
+                        std::memcpy(zData1 + 2, frame_id, FID_SIZE);
+                        std::memcpy(zData1 + FID_SIZE + 1, &payload_size, strlen(payload_size));
+                        std::memcpy(zData1 + FID_SIZE + PAYLOAD_SIZE + 1, zData + add, zDataLen);
+                        zDataLen = 0;
+                    }
+                    index++;
+                    sendto( socket_fd, (char*)zData1, PKT_SIZE + FID_SIZE + PAYLOAD_SIZE + 1, 0, (struct sockaddr*)&client_addr, length);
+                }
+                add = 0;
+            }
+            std::free(zData);
+#endif
+#if !defined(COMPRESS)
             sendto( socket_fd, data1, PKT_SIZE + FID_SIZE, 0, (struct sockaddr*)&client_addr, length);
             sendto( socket_fd, data2, PKT_SIZE + FID_SIZE, 0, (struct sockaddr*)&client_addr, length);
             sendto( socket_fd, data3, PKT_SIZE + FID_SIZE, 0, (struct sockaddr*)&client_addr, length);
@@ -160,6 +241,7 @@ int main( int argc, char* argv[] )
             sendto( socket_fd, data11, PKT_SIZE + FID_SIZE, 0, (struct sockaddr*)&client_addr, length);
             sendto( socket_fd, data12, PKT_SIZE + FID_SIZE, 0, (struct sockaddr*)&client_addr, length);
 #endif
+#endif
         }
     }
     iResult = closesocket(socket_fd);
@@ -172,6 +254,7 @@ int main( int argc, char* argv[] )
 
     mContext.Release();
 
+#if !defined(COMPRESS)
     free(data1);
     free(data2);
     free(data3);
@@ -186,6 +269,8 @@ int main( int argc, char* argv[] )
     free(data11);
     free(data12);
 #endif
+#else
+    free(zData1);
+#endif
     return 0;
 }
-
