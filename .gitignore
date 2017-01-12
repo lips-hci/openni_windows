@@ -1,4 +1,5 @@
 Debug/
+Release/
 x64/
 *.user
 *.opensdf
@@ -8,3 +9,4 @@ x64/
 
 *.filters
 
+*.swp
