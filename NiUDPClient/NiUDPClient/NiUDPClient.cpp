@@ -4,7 +4,6 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <winsock2.h>
 #include <Ws2tcpip.h>
-#define COMPRESS
 #if defined(COMPRESS)
 #include "zlib.h"
 #endif
@@ -173,7 +172,7 @@ int main( int argc, char* argv[] )
 #else
         memcpy(payload_size, data1 + FID_SIZE, PAYLOAD_SIZE - 1);
         cout << "payload_size : " << payload_size << "(" << atoi(payload_size) << ")" << endl;
-        memcpy(data_all + len, data1 + FID_SIZE + PAYLOAD_SIZE, atoi(payload_size));
+        memcpy(data_all + offset * PKT_SIZE, data1 + FID_SIZE + PAYLOAD_SIZE, atoi(payload_size));
         len += atoi(payload_size);
 #endif
     }
