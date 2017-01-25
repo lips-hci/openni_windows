@@ -80,7 +80,7 @@ int main( int argc, char* argv[] )
 #endif
 #else
     char *zData1;
-    zData1 = (char*)malloc((PKT_SIZE + FID_SIZE + PAYLOAD_SIZE + 1)*sizeof(char));
+    zData1 = (char*)malloc((PKT_SIZE + FID_SIZE + PAYLOAD_SIZE)*sizeof(char));
     char payload_size[PAYLOAD_SIZE] = {0};
 #endif
 
@@ -193,34 +193,28 @@ int main( int argc, char* argv[] )
                 const char payload_offset[] = "ABCDEFGHIJKL";
                 int index = 0;
                 int add = 0;
-                int pkt_count;
-                if ( zDataLen % PKT_SIZE) {
-                    pkt_count = zDataLen / PKT_SIZE + 1;
-                } else {
-                    pkt_count = zDataLen / PKT_SIZE;
-                }
+
                 while(zDataLen > 0) {
                     memset(zData1, 0, PKT_SIZE + FID_SIZE + PAYLOAD_SIZE + 1);
                     if (zDataLen > PKT_SIZE) {
                         sprintf(payload_size, "%d", PKT_SIZE);
                         memset(zData1, *(payload_offset + index), 1);
-                        memset(zData1 + 1, *(payload_offset + pkt_count - 1), 1);
-                        std::memcpy(zData1 + 2, frame_id, FID_SIZE);
-                        std::memcpy(zData1 + FID_SIZE + 1, &payload_size, PAYLOAD_SIZE);
-                        std::memcpy(zData1 + FID_SIZE + PAYLOAD_SIZE + 1, zData + add, PKT_SIZE);
+                        std::memcpy(zData1 + 1, frame_id, FID_SIZE);
+                        std::memcpy(zData1 + FID_SIZE, &payload_size, PAYLOAD_SIZE);
+                        std::memcpy(zData1 + FID_SIZE + PAYLOAD_SIZE, zData + add, PKT_SIZE);
                         zDataLen -= PKT_SIZE;
                         add += PKT_SIZE;
                     } else {
                         sprintf(payload_size, "%d", (int)zDataLen);
                         memset(zData1, *(payload_offset + index), 1);
-                        memset(zData1 + 1, *(payload_offset + pkt_count - 1), 1);
-                        std::memcpy(zData1 + 2, frame_id, FID_SIZE);
-                        std::memcpy(zData1 + FID_SIZE + 1, &payload_size, strlen(payload_size));
-                        std::memcpy(zData1 + FID_SIZE + PAYLOAD_SIZE + 1, zData + add, zDataLen);
+                        std::memcpy(zData1 + 1, frame_id, FID_SIZE);
+                        std::memcpy(zData1 + FID_SIZE, &payload_size, strlen(payload_size));
+                        std::memcpy(zData1 + FID_SIZE + PAYLOAD_SIZE, zData + add, zDataLen);
                         zDataLen = 0;
                     }
                     index++;
-                    sendto( socket_fd, (char*)zData1, PKT_SIZE + FID_SIZE + PAYLOAD_SIZE + 1, 0, (struct sockaddr*)&client_addr, length);
+                    sendto( socket_fd, (char*)zData1, PKT_SIZE + FID_SIZE + PAYLOAD_SIZE, 0, (struct sockaddr*)&client_addr, length);
+                    Sleep(30);
                 }
                 add = 0;
             }
