@@ -246,4 +246,5 @@ int main()
     g_DepthGenerator.Release();
     g_UserGenerator.Release();
     mContext.Release();
+    return 0;
 }
