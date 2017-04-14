@@ -43,21 +43,28 @@ struct Points
     Point RB;
 };
 
-double calcSD( unsigned int *dataSet )
+double calcMean( unsigned int *dataSet )
 {
     double sum = 0;
+    double mean = 0;
+    for ( int i = 1; i <= g_recordingFrame; i++ )
+    {
+        sum += *( dataSet + i );
+    }
+    mean = sum / g_recordingFrame;
+    return mean;
+}
+
+double calcSD( unsigned int *dataSet )
+{
     double mean = 0;
     double dev = 0;
     double sdev = 0;
     double var = 0;
     double sd = 0;
-    unsigned int i = 0;
+    int i = 0;
 
-    for ( i = 1; i <= g_recordingFrame; i++ )
-    {
-        sum += *( dataSet + i );
-    }
-    mean = sum / g_recordingFrame;
+    mean = calcMean( dataSet );
     for ( i = 1; i <= g_recordingFrame; i++ )
     {
         dev = ( *( dataSet + i ) - mean ) * ( *( dataSet + i ) - mean );
@@ -293,7 +300,7 @@ int _tmain( int argc, _TCHAR* argv[] )
 	cout << "Test start ( " << g_xRes << "x" << g_yRes << " f=" << g_ratio << " K=" << g_recordingFrame << " b=" << g_blockSize << " )" << endl;
     cout << "Progress: ";
 
-    unsigned int i = 0;
+    int i = 0;
     unsigned int percent = 10;
     while ( i < ( g_recordingFrame + 1 ) )
     {
@@ -335,8 +342,30 @@ int _tmain( int argc, _TCHAR* argv[] )
     ofstream newfile( LOG_PATH );
     // row 1
     newfile << "point,LT,T,RT,L,C,R,LB,B,RB\n";
-    newfile << "deviation,";
 
+    // Print mean for each block
+    newfile << "mean,";
+    // LT
+    newfile << calcMean( mDataSet_LT ) << ",";
+    // T
+    newfile << calcMean( mDataSet_T ) << ",";
+    // RT
+    newfile << calcMean( mDataSet_RT ) << ",";
+    // L
+    newfile << calcMean( mDataSet_L ) << ",";
+    // C
+    newfile << calcMean( mDataSet_C ) << ",";
+    // R
+    newfile << calcMean( mDataSet_R ) << ",";
+    // LB
+    newfile << calcMean( mDataSet_LB ) << ",";
+    // B
+    newfile << calcMean( mDataSet_B ) << ",";
+    // RB
+    newfile << calcMean( mDataSet_RB ) << "\n";
+
+    // Print deviation for each block
+    newfile << "deviation,";
     // LT
     newfile << calcSD( mDataSet_LT ) << ",";
     // T
