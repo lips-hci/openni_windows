@@ -3,6 +3,10 @@
 
 #include "stdafx.h"
 
+#define QQQVGA_WIDTH 80
+#define QQQVGA_HEIGHT 60
+#define QQVGA_WIDTH 160
+#define QQVGA_HEIGHT 120
 #define QVGA_WIDTH 320
 #define QVGA_HEIGHT 240
 #define VGA_WIDTH 640
@@ -84,6 +88,18 @@ void setResolution( _TCHAR *res )
     }
     else if ( _tcscmp( res, L"qvga" ) == 0 || _tcscmp( res, L"QVGA" ) == 0 )
     {
+        g_xRes = QVGA_WIDTH;
+        g_yRes = QVGA_HEIGHT;
+    }
+    else if ( _tcscmp( res, L"qqvga" ) == 0 || _tcscmp( res, L"QQVGA" ) == 0 )
+    {
+        g_xRes = QQVGA_WIDTH;
+        g_yRes = QQVGA_HEIGHT;
+    }
+    else if ( _tcscmp( res, L"qqqvga" ) == 0 || _tcscmp( res, L"QQQVGA" ) == 0 )
+    {
+        g_xRes = QQQVGA_WIDTH;
+        g_yRes = QQQVGA_HEIGHT;
     }
     else
     {
