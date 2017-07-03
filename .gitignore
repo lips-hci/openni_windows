@@ -1,6 +1,7 @@
 Debug/
 Release/
 x64/
+ipch/
 *.user
 *.opensdf
 *.sdf
@@ -10,3 +11,5 @@ x64/
 *.filters
 
 *.swp
+
+*.aps
