@@ -9,6 +9,11 @@ using namespace cv;
 
 #define FPG_AVG_COUNT 60
 
+void onMouse(int Event, int x, int y, int flags, void* param);
+int Xres = 0;
+int Yres = 0;
+UINT16 Zres = 0;
+
 enum showOp {
     DEPTH = 1,
     IMAGE = 2,
@@ -58,6 +63,15 @@ int getUserInput() {
     };
 }
 
+void onMouse( int Event, int x, int y, int flags, void* param )
+{
+    if (Event == EVENT_MOUSEMOVE)
+    {
+        Xres = x;
+        Yres = y;
+    }
+}
+
 int _tmain(int argc, _TCHAR* argv[])
 {
     int option = getUserInput();
@@ -97,6 +111,7 @@ int _tmain(int argc, _TCHAR* argv[])
     mContext.StartGeneratingAll();
 
     char fpsstr[7];
+    char xyzstr[128];
     double tStart = 0;
 
     while ( !xnOSWasKeyboardHit() )
@@ -112,7 +127,11 @@ int _tmain(int argc, _TCHAR* argv[])
             xnFPSMarkFrame(&xnDepthFPS);
             sprintf_s(fpsstr, sizeof(fpsstr), "%.2f", xnFPSCalc(&xnDepthFPS));
             putText(img8bitDepth, string("FPS:") + fpsstr, Point(5, 20), FONT_HERSHEY_DUPLEX, 1.0, Scalar(200, 0, 0));
+            Zres = depthData(Xres, Yres);
+            sprintf_s(xyzstr, sizeof(xyzstr), "X : %d, Y : %d, Depth : %u", Xres, Yres, Zres);
+            putText(img8bitDepth, xyzstr, Point(5, 50), FONT_HERSHEY_DUPLEX, 1.0, Scalar(200, 0, 0));
             imshow( "Depth view", img8bitDepth );
+            setMouseCallback( "Depth view", onMouse, NULL );
         }
 
         if ( option & IMAGE ) {
