@@ -285,25 +285,40 @@ int _tmain( int argc, _TCHAR* argv[] )
     unsigned int *mDataSet_B = ( unsigned int* ) calloc ( g_recordingFrame + 1, sizeof( unsigned int ) );
     unsigned int *mDataSet_RB = ( unsigned int* ) calloc ( g_recordingFrame + 1, sizeof( unsigned int ) );
     Points mPoints;
+    // cos(@) = 4/5
+    // sin(@) = 3/5
+    double hypotenuse = sqrt(pow(mapMode.nXRes * 0.5, 2) + pow(mapMode.nYRes * 0.5, 2)) * g_ratio;
+    double a_side = hypotenuse * 4 / 5; //hypotenuse * cos(@)
+    double b_side = hypotenuse * 3 / 5; //hypotenuse * sin(@)
 
-    mPoints.LT.x = ( unsigned )( mapMode.nXRes * ( 1 - g_ratio ) );
-    mPoints.LT.y = ( unsigned )( mapMode.nYRes * ( 1 - g_ratio ) );
-    mPoints.T.x = ( unsigned )( mapMode.nXRes / 2 );
-    mPoints.T.y = ( unsigned )( mapMode.nYRes * ( 1 - g_ratio ) );
-    mPoints.RT.x = ( unsigned )( mapMode.nXRes * g_ratio );
-    mPoints.RT.y = ( unsigned )( mapMode.nYRes * ( 1 - g_ratio ) );
-    mPoints.L.x = ( unsigned )( mapMode.nXRes * ( 1 - g_ratio ) );
-    mPoints.L.y = ( unsigned )( mapMode.nYRes / 2 );
-    mPoints.C.x = ( unsigned )( mapMode.nXRes / 2 );
-    mPoints.C.y = ( unsigned )( mapMode.nYRes / 2 );
-    mPoints.R.x = ( unsigned )( mapMode.nXRes * g_ratio );
-    mPoints.R.y = ( unsigned )( mapMode.nYRes / 2 );
-    mPoints.LB.x = ( unsigned )( mapMode.nXRes * ( 1 - g_ratio ) );
-    mPoints.LB.y = ( unsigned )( mapMode.nYRes * g_ratio );
-    mPoints.B.x = ( unsigned )( mapMode.nXRes / 2 );
-    mPoints.B.y = ( unsigned )( mapMode.nYRes * g_ratio );
-    mPoints.RB.x = ( unsigned )( mapMode.nXRes * g_ratio );
-    mPoints.RB.y = ( unsigned )( mapMode.nYRes * g_ratio );
+    mPoints.C.x = ( unsigned )( mapMode.nXRes * 0.5 );
+    mPoints.C.y = ( unsigned )( mapMode.nYRes * 0.5 );
+    mPoints.LT.x = ( unsigned )( mPoints.C.x - a_side );
+    mPoints.LT.y = ( unsigned )( mPoints.C.y - b_side );
+    mPoints.T.x = ( unsigned )( mPoints.C.x );
+    mPoints.T.y = ( unsigned )( mPoints.C.y - b_side );
+    mPoints.RT.x = ( unsigned )( mPoints.C.x + a_side );
+    mPoints.RT.y = ( unsigned )( mPoints.C.y - b_side);
+    mPoints.L.x = ( unsigned )( mPoints.C.x - a_side );
+    mPoints.L.y = ( unsigned )( mPoints.C.y );
+    mPoints.R.x = ( unsigned )( mPoints.C.x + a_side );
+    mPoints.R.y = ( unsigned )( mPoints.C.y );
+    mPoints.LB.x = ( unsigned )( mPoints.C.x - a_side );
+    mPoints.LB.y = ( unsigned )( mPoints.C.y + b_side );
+    mPoints.B.x = ( unsigned )( mPoints.C.x );
+    mPoints.B.y = ( unsigned )( mPoints.C.y + b_side );
+    mPoints.RB.x = ( unsigned )( mPoints.C.x + a_side );
+    mPoints.RB.y = ( unsigned )( mPoints.C.y + b_side );
+
+    cout << "LT (" << mPoints.LT.x << ", " << mPoints.LT.y << ")" << endl;
+    cout << "T (" << mPoints.T.x << ", " << mPoints.T.y << ")" << endl;
+    cout << "RT (" << mPoints.RT.x << ", " << mPoints.RT.y << ")" << endl;
+    cout << "L (" << mPoints.L.x << ", " << mPoints.L.y << ")" << endl;
+    cout << "C (" << mPoints.C.x << ", " << mPoints.C.y << ")" << endl;
+    cout << "R (" << mPoints.R.x << ", " << mPoints.R.y << ")" << endl;
+    cout << "LB (" << mPoints.LB.x << ", " << mPoints.LB.y << ")" << endl;
+    cout << "B (" << mPoints.B.x << ", " << mPoints.B.y << ")" << endl;
+    cout << "RB (" << mPoints.RB.x << ", " << mPoints.RB.y << ")" << endl;
 
     mContext.StartGeneratingAll();
 
