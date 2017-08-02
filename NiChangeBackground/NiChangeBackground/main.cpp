@@ -11,7 +11,7 @@ using namespace std;
 using namespace xn;
 using namespace cv;
 
-#define DEBUG ¢°
+#define DEBUG 1
 cv::Mat colorBG;
 xn::Device mDevice;
 vector<std::string> filenames;
