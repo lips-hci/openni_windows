@@ -123,14 +123,18 @@ int _tmain(int argc, _TCHAR* argv[])
             mDepthGen.GetMetaData( depthData );
             Mat imgDepth( depthData.FullYRes(), depthData.FullXRes(), CV_16UC1, ( void* )depthData.Data() );
             Mat img8bitDepth;
-            imgDepth.convertTo( img8bitDepth, CV_8U, 255.0 / 4096 );
+            Mat img8bit3ChDepth;
+            Mat img8bit3ChMask = Mat( depthData.FullYRes(), depthData.FullXRes(), CV_8UC3, Scalar(0, 255, 255) );
+            imgDepth.convertTo( img8bitDepth, CV_8U, 255.0 / 10000 );
+            cvtColor( img8bitDepth, img8bit3ChDepth, CV_GRAY2BGR );
+            bitwise_and( img8bit3ChDepth, img8bit3ChMask, img8bit3ChDepth );
             xnFPSMarkFrame(&xnDepthFPS);
             sprintf_s(fpsstr, sizeof(fpsstr), "%.2f", xnFPSCalc(&xnDepthFPS));
-            putText(img8bitDepth, string("FPS:") + fpsstr, Point(5, 20), FONT_HERSHEY_DUPLEX, 1.0, Scalar(200, 0, 0));
+            putText(img8bit3ChDepth, string("FPS:") + fpsstr, Point(5, 20), FONT_HERSHEY_DUPLEX, (depthData.FullXRes()>320)?1.0:0.5, Scalar(255, 255, 255));
             Zres = depthData(Xres, Yres);
             sprintf_s(xyzstr, sizeof(xyzstr), "X : %d, Y : %d, Depth : %u", Xres, Yres, Zres);
-            putText(img8bitDepth, xyzstr, Point(5, 50), FONT_HERSHEY_DUPLEX, 1.0, Scalar(200, 0, 0));
-            imshow( "Depth view", img8bitDepth );
+            putText(img8bit3ChDepth, xyzstr, Point(5, 50), FONT_HERSHEY_DUPLEX, (depthData.FullXRes()>320)?1.0:0.5, Scalar(255, 255, 255));
+            imshow( "Depth view", img8bit3ChDepth );
             setMouseCallback( "Depth view", onMouse, NULL );
         }
 
@@ -141,7 +145,7 @@ int _tmain(int argc, _TCHAR* argv[])
             cvtColor( imgColor, imgBGRColor, CV_RGB2BGR );
             xnFPSMarkFrame(&xnColorFPS);
             sprintf_s(fpsstr, sizeof(fpsstr), "%.2f", xnFPSCalc(&xnColorFPS));
-            putText(imgBGRColor, string("FPS:") + fpsstr, Point(5, 20), FONT_HERSHEY_DUPLEX, 1.0, Scalar(200, 0, 0));
+            putText(imgBGRColor, string("FPS:") + fpsstr, Point(5, 20), FONT_HERSHEY_DUPLEX, (colorData.FullXRes()>320)?1.0:0.5, Scalar(200, 0, 0));
             imshow( "Color view", imgBGRColor );
         }
 
@@ -152,7 +156,7 @@ int _tmain(int argc, _TCHAR* argv[])
             imgIR.convertTo( img8bitIR, CV_8U, 255.0 / 4096 );
             xnFPSMarkFrame(&xnIrFPS);
             sprintf_s(fpsstr, sizeof(fpsstr), "%.2f", xnFPSCalc(&xnIrFPS));
-            putText(img8bitIR, string("FPS:") + fpsstr, Point(5, 20), FONT_HERSHEY_DUPLEX, 1.0, Scalar(200, 0, 0));
+            putText(img8bitIR, string("FPS:") + fpsstr, Point(5, 20), FONT_HERSHEY_DUPLEX, (irData.FullXRes()>320)?1.0:0.5, Scalar(200, 0, 0));
             imshow( "IR view", img8bitIR );
         }
 
