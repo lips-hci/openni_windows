@@ -71,38 +71,109 @@ int getUserInput() {
     };
 }
 
-int getResolutionSetting() {
-    int option = 0;
-    cout << "1) VGA (640x480), FPS = 30" << endl;
-    cout << "2) VGA (640x480), FPS = 60" << endl;
-    cout << "3) QVGA (320x240), FPS = 30" << endl;
-    cout << "4) QQQVGA (80x60)" << endl;
-    cout << "5) Use default value" << endl;
-    cout << "0) Exit" << endl;
-    cout << "Please input your choice : ";
-    cin >> option;
-    switch (option) {
-    case 1:
-        return VGAx30;
-        break;
-    case 2:
-        return VGAx60;
-        break;
-    case 3:
-        return QVGAx30;
-        break;
-    case 4:
-        return QQQVGA;
-        break;
-    case 5:
-        return SDK_DEFAULT;
-    case 0:
-        return 0;
-        break;
-    default:
-        return getResolutionSetting();
-        break;
-    };
+void showResolution ( XnMapOutputMode* mapMode ) {
+    if ( 640 == mapMode->nXRes && 480 == mapMode->nYRes ) {
+        cout << "VGA ( 640 x 480 ), FPS = " << mapMode->nFPS << endl;
+    } else if ( 320 == mapMode->nXRes && 240 == mapMode->nYRes ) {
+        cout << "QVGA ( 320 x 240 ), FPS = " << mapMode->nFPS << endl;
+    } else if ( 160 == mapMode->nXRes && 120 == mapMode->nYRes ) {
+        cout << "QQVGA ( 160 x 120 ), FPS = " << mapMode->nFPS << endl;
+    } else if ( 80 == mapMode->nXRes && 60 == mapMode->nYRes ) {
+        cout << "QQQVGA ( 80 x 60 ), FPS = " << mapMode->nFPS << endl;
+    } else if ( 1920 == mapMode->nXRes && 1080 == mapMode->nYRes ) {
+        cout << "FHD ( 1920 x 1080 ), FPS = " << mapMode->nFPS << endl;
+    } else {
+        cout << "Unknown ( " << mapMode->nXRes << " x " << mapMode->nYRes << "), FPS = " << mapMode->nFPS << endl;
+    }
+}
+
+void getResolutionSetting( int query_option, DepthGenerator* depthData, ImageGenerator* imageData, IRGenerator* irData,
+                          XnMapOutputMode* depthOutputMode, XnMapOutputMode* imageOutputMode, XnMapOutputMode* irOutputMode ) {
+    unsigned int depthModeCount = 0;
+    unsigned int imageModeCount = 0;
+    unsigned int irModeCount = 0;
+    XnMapOutputMode* depthModes;
+    XnMapOutputMode* imageModes;
+    XnMapOutputMode* irModes;
+    XnStatus status;
+    if ( query_option & DEPTH ) {
+        depthModeCount = depthData->GetSupportedMapOutputModesCount();
+        depthModes = new XnMapOutputMode[depthModeCount];
+        status = depthData->GetSupportedMapOutputModes( depthModes, depthModeCount );
+        if ( XN_STATUS_OK != status ) {
+            cout << "[Depth] GetSupportedMapOutputModes fail" << endl;
+        } else {
+            int answer;
+            unsigned int i;
+            cout << endl << endl;
+            cout << "Available options for DEPTH : " << endl;
+            for ( i = 0; i < depthModeCount; i++ ) {
+                cout << i + 1 << ") ";
+                showResolution ( &depthModes[i] );
+            }
+            cout << ++i << ") Use SDK default " << endl;
+            cout << "Please select resolution and FPS for Depth : ";
+            cin >> answer;
+            if ( answer > depthModeCount ) {
+                answer = 1;
+            }
+            depthOutputMode->nXRes = depthModes[answer-1].nXRes;
+            depthOutputMode->nYRes = depthModes[answer-1].nYRes;
+            depthOutputMode->nFPS = depthModes[answer-1].nFPS;
+        }
+    }
+    if ( query_option & IMAGE ) {
+        imageModeCount = imageData->GetSupportedMapOutputModesCount();
+        imageModes = new XnMapOutputMode[imageModeCount];
+        status = imageData->GetSupportedMapOutputModes( imageModes, imageModeCount );
+        if ( XN_STATUS_OK != status ) {
+            cout << "[Image] GetSupportedMapOutputModes fail" << endl;
+        } else {
+            int answer;
+            unsigned int i;
+            cout << endl << endl;
+            cout << "Available options for IMAGE : " << endl;
+            for ( i = 0; i < imageModeCount; i++ ) {
+                cout << i + 1 << ") ";
+                showResolution ( &imageModes[i] );
+            }
+            cout << ++i << ") Use SDK default " << endl;
+            cout << "Please select resolution and FPS for IMAGE : ";
+            cin >> answer;
+            if ( answer > imageModeCount ) {
+                answer = 1;
+            }
+            imageOutputMode->nXRes = imageModes[answer-1].nXRes;
+            imageOutputMode->nYRes = imageModes[answer-1].nYRes;
+            imageOutputMode->nFPS = imageModes[answer-1].nFPS;
+        }
+    }
+    if ( query_option & IR ) {
+        irModeCount = irData->GetSupportedMapOutputModesCount();
+        irModes = new XnMapOutputMode[irModeCount];
+        status = irData->GetSupportedMapOutputModes( irModes, irModeCount );
+        if ( XN_STATUS_OK != status ) {
+            cout << "[IR] GetSupportedMapOutputModes fail" << endl;
+        } else {
+            int answer;
+            unsigned int i;
+            cout << endl << endl;
+            cout << "Available options for IR : " << endl;
+            for ( i = 0; i < irModeCount; i++ ) {
+                cout << i + 1 << ") ";
+                showResolution ( &irModes[i] );
+            }
+            cout << ++i << ") Use SDK default " << endl;
+            cout << "Please select resolution and FPS for IR : ";
+            cin >> answer;
+            if ( answer > irModeCount ) {
+                answer = 1;
+            }
+            irOutputMode->nXRes = irModes[answer-1].nXRes;
+            irOutputMode->nYRes = irModes[answer-1].nYRes;
+            irOutputMode->nFPS = irModes[answer-1].nFPS;
+        }
+    }
 }
 
 void onMouse( int Event, int x, int y, int flags, void* param )
@@ -141,7 +212,9 @@ int _tmain(int argc, _TCHAR* argv[])
 
     XnFPSData xnDepthFPS, xnColorFPS, xnIrFPS;
 
-    XnMapOutputMode mapOutputMode;
+    XnMapOutputMode mapDepthOutputMode;
+    XnMapOutputMode mapImageOutputMode;
+    XnMapOutputMode mapIrOutputMode;
 
     mContext.Init();
 
@@ -158,38 +231,16 @@ int _tmain(int argc, _TCHAR* argv[])
         xnFPSInit(&xnIrFPS, FPG_AVG_COUNT);
     }
 
-    if ( res_option > SDK_DEFAULT ) {
-        switch ( res_option ) {
-        case VGAx30:
-            mapOutputMode.nXRes = 640;
-            mapOutputMode.nYRes = 480;
-            mapOutputMode.nFPS = 30;
-            break;
-        case VGAx60:
-            mapOutputMode.nXRes = 640;
-            mapOutputMode.nYRes = 480;
-            mapOutputMode.nFPS = 60;
-            break;
-        case QVGAx30:
-            mapOutputMode.nXRes = 320;
-            mapOutputMode.nYRes = 240;
-            mapOutputMode.nFPS = 30;
-            break;
-        case QQQVGA:
-            mapOutputMode.nXRes = 80;
-            mapOutputMode.nYRes = 60;
-            mapOutputMode.nFPS = 30;
-            break;
-        default:
-            res_option = SDK_DEFAULT;
-            break;
-        }
-        if ( option & DEPTH ) {
-            mDepthGen.SetMapOutputMode( mapOutputMode );
-        }
-        if ( option & IMAGE ) {
-            mImageGen.SetMapOutputMode( mapOutputMode );
-        }
+    getResolutionSetting( option, &mDepthGen, &mImageGen, &mIrGen, &mapDepthOutputMode, &mapImageOutputMode, &mapIrOutputMode);
+
+    if ( option & DEPTH ) {
+        mDepthGen.SetMapOutputMode( mapDepthOutputMode );
+    }
+    if ( option & IMAGE ) {
+        mImageGen.SetMapOutputMode( mapImageOutputMode );
+    }
+    if ( option & IR ) {
+        mImageGen.SetMapOutputMode( mapIrOutputMode );
     }
 
     mContext.StartGeneratingAll();
@@ -246,6 +297,7 @@ int _tmain(int argc, _TCHAR* argv[])
 
         waitKey( 1 );
     }
+    mContext.StopGeneratingAll();
     if ( option & DEPTH ) {
         mDepthGen.Release();
     }
