@@ -7,7 +7,7 @@ using namespace std;
 using namespace xn;
 using namespace cv;
 
-#define FPG_AVG_COUNT 60
+#define FPG_AVG_COUNT 120
 
 void onMouse(int Event, int x, int y, int flags, void* param);
 int Xres = 0;
@@ -18,6 +18,14 @@ enum showOp {
     DEPTH = 1,
     IMAGE = 2,
     IR = 4
+};
+
+enum showRes {
+    SDK_DEFAULT = 0,
+    VGAx30 = 1,
+    VGAx60 = 2,
+    QVGAx30 = 3,
+    QQQVGA = 4
 };
 
 int getUserInput() {
@@ -63,6 +71,40 @@ int getUserInput() {
     };
 }
 
+int getResolutionSetting() {
+    int option = 0;
+    cout << "1) VGA (640x480), FPS = 30" << endl;
+    cout << "2) VGA (640x480), FPS = 60" << endl;
+    cout << "3) QVGA (320x240), FPS = 30" << endl;
+    cout << "4) QQQVGA (80x60)" << endl;
+    cout << "5) Use default value" << endl;
+    cout << "0) Exit" << endl;
+    cout << "Please input your choice : ";
+    cin >> option;
+    switch (option) {
+    case 1:
+        return VGAx30;
+        break;
+    case 2:
+        return VGAx60;
+        break;
+    case 3:
+        return QVGAx30;
+        break;
+    case 4:
+        return QQQVGA;
+        break;
+    case 5:
+        return SDK_DEFAULT;
+    case 0:
+        return 0;
+        break;
+    default:
+        return getResolutionSetting();
+        break;
+    };
+}
+
 void onMouse( int Event, int x, int y, int flags, void* param )
 {
     if (Event == EVENT_MOUSEMOVE)
@@ -81,6 +123,12 @@ int _tmain(int argc, _TCHAR* argv[])
         return 0;
     }
 
+    int res_option = getResolutionSetting();
+    if ( 0 == res_option ) {
+        cout << "Exit program!" << endl;
+        return 0;
+    }
+
     Context mContext;
 
     DepthGenerator mDepthGen;
@@ -92,6 +140,8 @@ int _tmain(int argc, _TCHAR* argv[])
     IRMetaData irData;
 
     XnFPSData xnDepthFPS, xnColorFPS, xnIrFPS;
+
+    XnMapOutputMode mapOutputMode;
 
     mContext.Init();
 
@@ -106,6 +156,40 @@ int _tmain(int argc, _TCHAR* argv[])
     if ( option & IR ) {
         mIrGen.Create( mContext );
         xnFPSInit(&xnIrFPS, FPG_AVG_COUNT);
+    }
+
+    if ( res_option > SDK_DEFAULT ) {
+        switch ( res_option ) {
+        case VGAx30:
+            mapOutputMode.nXRes = 640;
+            mapOutputMode.nYRes = 480;
+            mapOutputMode.nFPS = 30;
+            break;
+        case VGAx60:
+            mapOutputMode.nXRes = 640;
+            mapOutputMode.nYRes = 480;
+            mapOutputMode.nFPS = 60;
+            break;
+        case QVGAx30:
+            mapOutputMode.nXRes = 320;
+            mapOutputMode.nYRes = 240;
+            mapOutputMode.nFPS = 30;
+            break;
+        case QQQVGA:
+            mapOutputMode.nXRes = 80;
+            mapOutputMode.nYRes = 60;
+            mapOutputMode.nFPS = 30;
+            break;
+        default:
+            res_option = SDK_DEFAULT;
+            break;
+        }
+        if ( option & DEPTH ) {
+            mDepthGen.SetMapOutputMode( mapOutputMode );
+        }
+        if ( option & IMAGE ) {
+            mImageGen.SetMapOutputMode( mapOutputMode );
+        }
     }
 
     mContext.StartGeneratingAll();
