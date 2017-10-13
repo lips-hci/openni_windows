@@ -64,16 +64,16 @@ int getUserInput() {
 }
 
 void showResolution ( XnMapOutputMode* mapMode ) {
-    if ( 640 == mapMode->nXRes && 480 == mapMode->nYRes ) {
+    if ( XN_VGA_X_RES == mapMode->nXRes && XN_VGA_Y_RES == mapMode->nYRes ) {
         cout << "VGA ( 640 x 480 ), FPS = " << mapMode->nFPS << endl;
-    } else if ( 320 == mapMode->nXRes && 240 == mapMode->nYRes ) {
+    } else if ( XN_QVGA_X_RES == mapMode->nXRes && XN_QVGA_Y_RES == mapMode->nYRes ) {
         cout << "QVGA ( 320 x 240 ), FPS = " << mapMode->nFPS << endl;
-    } else if ( 160 == mapMode->nXRes && 120 == mapMode->nYRes ) {
+    } else if ( XN_QQVGA_X_RES == mapMode->nXRes && XN_QQVGA_Y_RES == mapMode->nYRes ) {
         cout << "QQVGA ( 160 x 120 ), FPS = " << mapMode->nFPS << endl;
     } else if ( 80 == mapMode->nXRes && 60 == mapMode->nYRes ) {
         cout << "QQQVGA ( 80 x 60 ), FPS = " << mapMode->nFPS << endl;
-    } else if ( 1920 == mapMode->nXRes && 1080 == mapMode->nYRes ) {
-        cout << "FHD ( 1920 x 1080 ), FPS = " << mapMode->nFPS << endl;
+    } else if ( XN_1080P_X_RES == mapMode->nXRes && XN_1080P_Y_RES == mapMode->nYRes ) {
+        cout << "1080P ( 1920 x 1080 ), FPS = " << mapMode->nFPS << endl;
     } else {
         cout << "Unknown ( " << mapMode->nXRes << " x " << mapMode->nYRes << "), FPS = " << mapMode->nFPS << endl;
     }
@@ -234,8 +234,12 @@ int _tmain(int argc, _TCHAR* argv[])
     char fpsstr[7];
     char xyzstr[128];
     double tStart = 0;
-
-    while ( !xnOSWasKeyboardHit() )
+    bool quit = false;
+    bool capture = false;
+    vector<int> quality;
+    quality.push_back(CV_IMWRITE_PNG_COMPRESSION);
+    quality.push_back(0);
+    while ( true )
     {
         tStart = (double)getTickCount();
         mContext.WaitAndUpdateAll();
@@ -256,7 +260,10 @@ int _tmain(int argc, _TCHAR* argv[])
             sprintf_s(xyzstr, sizeof(xyzstr), "X : %d, Y : %d, Depth : %u", Xres, Yres, Zres);
             putText(img8bit3ChDepth, xyzstr, Point(5, 50), FONT_HERSHEY_DUPLEX, (depthData.FullXRes()>320)?1.0:0.5, Scalar(255, 255, 255));
             imshow( "Depth view", img8bit3ChDepth );
-            setMouseCallback( "Depth view", onMouse, NULL );
+            if ( capture ) {
+                imwrite( "depth_" + std::to_string(depthData.FrameID()) + ".png", img8bit3ChDepth, quality );
+            }
+            cv::setMouseCallback( "Depth view", onMouse, NULL );
         }
 
         if ( option & IMAGE ) {
@@ -268,6 +275,9 @@ int _tmain(int argc, _TCHAR* argv[])
             sprintf_s(fpsstr, sizeof(fpsstr), "%.2f", xnFPSCalc(&xnColorFPS));
             putText(imgBGRColor, string("FPS:") + fpsstr, Point(5, 20), FONT_HERSHEY_DUPLEX, (colorData.FullXRes()>320)?1.0:0.5, Scalar(200, 0, 0));
             imshow( "Color view", imgBGRColor );
+            if ( capture ) {
+                imwrite( "image_" + std::to_string(colorData.FrameID()) + ".png", imgBGRColor, quality );
+            }
         }
 
         if ( option & IR ) {
@@ -279,9 +289,33 @@ int _tmain(int argc, _TCHAR* argv[])
             sprintf_s(fpsstr, sizeof(fpsstr), "%.2f", xnFPSCalc(&xnIrFPS));
             putText(img8bitIR, string("FPS:") + fpsstr, Point(5, 20), FONT_HERSHEY_DUPLEX, (irData.FullXRes()>320)?1.0:0.5, Scalar(200, 0, 0));
             imshow( "IR view", img8bitIR );
+            if ( capture ) {
+                imwrite( "ir_" + std::to_string(irData.FrameID()) + ".png", img8bitIR, quality );
+            }
         }
 
-        waitKey( 1 );
+        int keyInput = waitKey( 1 );
+        if ( keyInput != -1 ) {
+            switch ( keyInput ) {
+            case 'Q': // Q = 81
+            case 'q': // q = 113
+                //q for exit
+                quit = true;
+                break;
+            case 'C': // C = 67
+            case 'c': // c = 99
+                // depth
+                capture = true;
+                break;
+            default:
+                break;
+            }
+        } else {
+            capture = false;
+        }
+        if ( quit ) {
+            break;
+        }
     }
     mContext.StopGeneratingAll();
     if ( option & DEPTH ) {
