@@ -9,6 +9,7 @@
 
 #include <stdio.h>
 #include <tchar.h>
+#include <string>
 
 #include <XnOpenNI.h>
 #include <XnCppWrapper.h>
