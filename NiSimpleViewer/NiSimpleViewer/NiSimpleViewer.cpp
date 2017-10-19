@@ -236,6 +236,7 @@ int _tmain(int argc, _TCHAR* argv[])
     double tStart = 0;
     bool quit = false;
     bool capture = false;
+    bool showText = true;
     vector<int> quality;
     quality.push_back(CV_IMWRITE_PNG_COMPRESSION);
     quality.push_back(0);
@@ -255,10 +256,14 @@ int _tmain(int argc, _TCHAR* argv[])
             bitwise_and( img8bit3ChDepth, img8bit3ChMask, img8bit3ChDepth );
             xnFPSMarkFrame(&xnDepthFPS);
             sprintf_s(fpsstr, sizeof(fpsstr), "%.2f", xnFPSCalc(&xnDepthFPS));
-            putText(img8bit3ChDepth, string("FPS:") + fpsstr, Point(5, 20), FONT_HERSHEY_DUPLEX, (depthData.FullXRes()>320)?1.0:0.5, Scalar(255, 255, 255));
+            if ( showText ) {
+                putText(img8bit3ChDepth, string("FPS:") + fpsstr, Point(5, 20), FONT_HERSHEY_DUPLEX, (depthData.FullXRes()>320)?1.0:0.5, Scalar(255, 255, 255));
+            }
             Zres = depthData(Xres, Yres);
             sprintf_s(xyzstr, sizeof(xyzstr), "X : %d, Y : %d, Depth : %u", Xres, Yres, Zres);
-            putText(img8bit3ChDepth, xyzstr, Point(5, 50), FONT_HERSHEY_DUPLEX, (depthData.FullXRes()>320)?1.0:0.5, Scalar(255, 255, 255));
+            if ( showText ) {
+                putText(img8bit3ChDepth, xyzstr, Point(5, 50), FONT_HERSHEY_DUPLEX, (depthData.FullXRes()>320)?1.0:0.5, Scalar(255, 255, 255));
+            }
             imshow( "Depth view", img8bit3ChDepth );
             if ( capture ) {
                 imwrite( "depth_" + std::to_string(depthData.FrameID()) + ".png", img8bit3ChDepth, quality );
@@ -273,7 +278,9 @@ int _tmain(int argc, _TCHAR* argv[])
             cvtColor( imgColor, imgBGRColor, CV_RGB2BGR );
             xnFPSMarkFrame(&xnColorFPS);
             sprintf_s(fpsstr, sizeof(fpsstr), "%.2f", xnFPSCalc(&xnColorFPS));
-            putText(imgBGRColor, string("FPS:") + fpsstr, Point(5, 20), FONT_HERSHEY_DUPLEX, (colorData.FullXRes()>320)?1.0:0.5, Scalar(200, 0, 0));
+            if ( showText ) {
+                putText(imgBGRColor, string("FPS:") + fpsstr, Point(5, 20), FONT_HERSHEY_DUPLEX, (colorData.FullXRes()>320)?1.0:0.5, Scalar(200, 0, 0));
+            }
             imshow( "Color view", imgBGRColor );
             if ( capture ) {
                 imwrite( "image_" + std::to_string(colorData.FrameID()) + ".png", imgBGRColor, quality );
@@ -287,7 +294,9 @@ int _tmain(int argc, _TCHAR* argv[])
             imgIR.convertTo( img8bitIR, CV_8U, 255.0 / 4096 );
             xnFPSMarkFrame(&xnIrFPS);
             sprintf_s(fpsstr, sizeof(fpsstr), "%.2f", xnFPSCalc(&xnIrFPS));
-            putText(img8bitIR, string("FPS:") + fpsstr, Point(5, 20), FONT_HERSHEY_DUPLEX, (irData.FullXRes()>320)?1.0:0.5, Scalar(200, 0, 0));
+            if ( showText ) {
+                putText(img8bitIR, string("FPS:") + fpsstr, Point(5, 20), FONT_HERSHEY_DUPLEX, (irData.FullXRes()>320)?1.0:0.5, Scalar(200, 0, 0));
+            }
             imshow( "IR view", img8bitIR );
             if ( capture ) {
                 imwrite( "ir_" + std::to_string(irData.FrameID()) + ".png", img8bitIR, quality );
@@ -306,6 +315,10 @@ int _tmain(int argc, _TCHAR* argv[])
             case 'c': // c = 99
                 // depth
                 capture = true;
+                break;
+            case 'F': // F = 70
+            case 'f': // f = 102
+                showText = (showText)?false:true;
                 break;
             default:
                 break;
