@@ -22,6 +22,7 @@ enum showOp {
 
 int getUserInput() {
     int option = 0;
+    system("cls");
     cout << "1) Depth only" << endl;
     cout << "2) Image only" << endl;
     cout << "3) IR only" << endl;
@@ -55,7 +56,7 @@ int getUserInput() {
         return (DEPTH + IMAGE + IR);
         break;
     case 0:
-        return 0;
+        return -1;
         break;
     default:
         return getUserInput();
@@ -74,8 +75,10 @@ void showResolution ( XnMapOutputMode* mapMode ) {
         cout << "QQQVGA ( 80 x 60 ), FPS = " << mapMode->nFPS << endl;
     } else if ( XN_1080P_X_RES == mapMode->nXRes && XN_1080P_Y_RES == mapMode->nYRes ) {
         cout << "1080P ( 1920 x 1080 ), FPS = " << mapMode->nFPS << endl;
+    } else if ( XN_720P_X_RES == mapMode->nXRes && XN_720P_Y_RES == mapMode->nYRes ) {
+        cout << "720P ( 1280 x720 ), FPS = " << mapMode->nFPS << endl;
     } else {
-        cout << "Unknown ( " << mapMode->nXRes << " x " << mapMode->nYRes << "), FPS = " << mapMode->nFPS << endl;
+        cout << "Unknown ( " << mapMode->nXRes << " x " << mapMode->nYRes << " ), FPS = " << mapMode->nFPS << endl;
     }
 }
 
@@ -84,86 +87,102 @@ void getResolutionSetting( int query_option, DepthGenerator* depthData, ImageGen
     unsigned int depthModeCount = 0;
     unsigned int imageModeCount = 0;
     unsigned int irModeCount = 0;
-    XnMapOutputMode* depthModes;
-    XnMapOutputMode* imageModes;
-    XnMapOutputMode* irModes;
+
+    system("cls");
     XnStatus status;
     if ( query_option & DEPTH ) {
         depthModeCount = depthData->GetSupportedMapOutputModesCount();
-        depthModes = new XnMapOutputMode[depthModeCount];
-        status = depthData->GetSupportedMapOutputModes( depthModes, depthModeCount );
-        if ( XN_STATUS_OK != status ) {
-            cout << "[Depth] GetSupportedMapOutputModes fail" << endl;
+        if ( depthModeCount < 1 ) {
+            cout << "[Depth] Device doesn't support depth" << endl;
         } else {
-            unsigned int answer;
-            unsigned int i;
-            cout << endl << endl;
-            cout << "Available options for DEPTH : " << endl;
-            for ( i = 0; i < depthModeCount; i++ ) {
-                cout << i + 1 << ") ";
-                showResolution ( &depthModes[i] );
+            XnMapOutputMode* depthModes = new XnMapOutputMode[depthModeCount];
+            status = depthData->GetSupportedMapOutputModes( depthModes, depthModeCount );
+            if ( XN_STATUS_OK != status ) {
+                cout << "[Depth] GetSupportedMapOutputModes fail" << endl;
+            } else {
+                unsigned int answer = 1;
+                unsigned int i;
+                cout << endl << endl;
+                cout << "Available options for DEPTH : " << endl;
+                for ( i = 0; i < depthModeCount; i++ ) {
+                    cout << i + 1 << ") ";
+                    showResolution ( &depthModes[i] );
+                }
+                cout << ++i << ") Use SDK default " << endl;
+                cout << "Please select resolution and FPS for Depth : ";
+                cin >> answer;
+                if ( answer > depthModeCount ) {
+                    answer = 1;
+                }
+                depthOutputMode->nXRes = depthModes[answer-1].nXRes;
+                depthOutputMode->nYRes = depthModes[answer-1].nYRes;
+                depthOutputMode->nFPS = depthModes[answer-1].nFPS;
             }
-            cout << ++i << ") Use SDK default " << endl;
-            cout << "Please select resolution and FPS for Depth : ";
-            cin >> answer;
-            if ( answer > depthModeCount ) {
-                answer = 1;
-            }
-            depthOutputMode->nXRes = depthModes[answer-1].nXRes;
-            depthOutputMode->nYRes = depthModes[answer-1].nYRes;
-            depthOutputMode->nFPS = depthModes[answer-1].nFPS;
+            delete [] depthModes;
         }
     }
     if ( query_option & IMAGE ) {
         imageModeCount = imageData->GetSupportedMapOutputModesCount();
-        imageModes = new XnMapOutputMode[imageModeCount];
-        status = imageData->GetSupportedMapOutputModes( imageModes, imageModeCount );
-        if ( XN_STATUS_OK != status ) {
-            cout << "[Image] GetSupportedMapOutputModes fail" << endl;
+        if ( imageModeCount < 1 ) {
+            cout << "[Image] Device doesn't support RGB" << endl;
         } else {
-            unsigned int answer;
-            unsigned int i;
-            cout << endl << endl;
-            cout << "Available options for IMAGE : " << endl;
-            for ( i = 0; i < imageModeCount; i++ ) {
-                cout << i + 1 << ") ";
-                showResolution ( &imageModes[i] );
+            XnMapOutputMode* imageModes;
+            imageModes = new XnMapOutputMode[imageModeCount];
+            status = imageData->GetSupportedMapOutputModes( imageModes, imageModeCount );
+            if ( XN_STATUS_OK != status ) {
+                cout << "[Image] GetSupportedMapOutputModes fail" << endl;
+            } else {
+                unsigned int answer = 1;
+                unsigned int i;
+                cout << endl << endl;
+                cout << "Available options for IMAGE : " << endl;
+                for ( i = 0; i < imageModeCount; i++ ) {
+                    cout << i + 1 << ") ";
+                    showResolution ( &imageModes[i] );
+                }
+                cout << ++i << ") Use SDK default " << endl;
+                cout << "Please select resolution and FPS for IMAGE : ";
+                cin >> answer;
+                if ( answer > imageModeCount ) {
+                    answer = 1;
+                }
+                imageOutputMode->nXRes = imageModes[answer-1].nXRes;
+                imageOutputMode->nYRes = imageModes[answer-1].nYRes;
+                imageOutputMode->nFPS = imageModes[answer-1].nFPS;
             }
-            cout << ++i << ") Use SDK default " << endl;
-            cout << "Please select resolution and FPS for IMAGE : ";
-            cin >> answer;
-            if ( answer > imageModeCount ) {
-                answer = 1;
-            }
-            imageOutputMode->nXRes = imageModes[answer-1].nXRes;
-            imageOutputMode->nYRes = imageModes[answer-1].nYRes;
-            imageOutputMode->nFPS = imageModes[answer-1].nFPS;
+            delete [] imageModes;
         }
     }
     if ( query_option & IR ) {
         irModeCount = irData->GetSupportedMapOutputModesCount();
-        irModes = new XnMapOutputMode[irModeCount];
-        status = irData->GetSupportedMapOutputModes( irModes, irModeCount );
-        if ( XN_STATUS_OK != status ) {
-            cout << "[IR] GetSupportedMapOutputModes fail" << endl;
+        if ( irModeCount < 1 ) {
+            cout << "[IR] Device doesn't support IR" << endl;
         } else {
-            unsigned int answer;
-            unsigned int i;
-            cout << endl << endl;
-            cout << "Available options for IR : " << endl;
-            for ( i = 0; i < irModeCount; i++ ) {
-                cout << i + 1 << ") ";
-                showResolution ( &irModes[i] );
+            XnMapOutputMode* irModes;
+            irModes = new XnMapOutputMode[irModeCount];
+            status = irData->GetSupportedMapOutputModes( irModes, irModeCount );
+            if ( XN_STATUS_OK != status ) {
+                cout << "[IR] GetSupportedMapOutputModes fail" << endl;
+            } else {
+                unsigned int answer = 1;
+                unsigned int i;
+                cout << endl << endl;
+                cout << "Available options for IR : " << endl;
+                for ( i = 0; i < irModeCount; i++ ) {
+                    cout << i + 1 << ") ";
+                    showResolution ( &irModes[i] );
+                }
+                cout << ++i << ") Use SDK default " << endl;
+                cout << "Please select resolution and FPS for IR : ";
+                cin >> answer;
+                if ( answer > irModeCount ) {
+                    answer = 1;
+                }
+                irOutputMode->nXRes = irModes[answer-1].nXRes;
+                irOutputMode->nYRes = irModes[answer-1].nYRes;
+                irOutputMode->nFPS = irModes[answer-1].nFPS;
             }
-            cout << ++i << ") Use SDK default " << endl;
-            cout << "Please select resolution and FPS for IR : ";
-            cin >> answer;
-            if ( answer > irModeCount ) {
-                answer = 1;
-            }
-            irOutputMode->nXRes = irModes[answer-1].nXRes;
-            irOutputMode->nYRes = irModes[answer-1].nYRes;
-            irOutputMode->nFPS = irModes[answer-1].nFPS;
+            delete [] irModes;
         }
     }
 }
@@ -181,7 +200,7 @@ int _tmain(int argc, _TCHAR* argv[])
 {
     int option = getUserInput();
 
-    if ( 0 == option ) {
+    if ( -1 == option ) {
         cout << "Exit program!" << endl;
         return 0;
     }
@@ -226,7 +245,7 @@ int _tmain(int argc, _TCHAR* argv[])
         mImageGen.SetMapOutputMode( mapImageOutputMode );
     }
     if ( option & IR ) {
-        mImageGen.SetMapOutputMode( mapIrOutputMode );
+        mIrGen.SetMapOutputMode( mapIrOutputMode );
     }
 
     mContext.StartGeneratingAll();
@@ -341,6 +360,7 @@ int _tmain(int argc, _TCHAR* argv[])
         mIrGen.Release();
     }
     mContext.Release();
+    destroyAllWindows();
     return 0;
 }
 
