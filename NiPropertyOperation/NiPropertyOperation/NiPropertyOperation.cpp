@@ -13,16 +13,16 @@ int _tmain(int argc, _TCHAR* argv[])
     Context mContext;
     mContext.Init();
 
-    DepthGenerator mDepthGen;
+    Device mDevice;
     XnStatus status;
     string name;
     XnUInt64 value;
-    status = mDepthGen.Create(mContext);
+    status = mDevice.Create(mContext);
     if ( XN_STATUS_OK == status ) {
         cout << "GetIntProperty --> name : ";
         cin >> name;
         cout << endl;
-        status = mDepthGen.GetIntProperty( name.c_str(), value );
+        status = mDevice.GetIntProperty( name.c_str(), value );
         if ( XN_STATUS_OK == status ) {
             cout << "IntProperty ( " << name << ") = " << value;
         } else {
@@ -32,7 +32,7 @@ int _tmain(int argc, _TCHAR* argv[])
         cin >> name;
         cout << endl << "SetIntProperty --> value : ";
         cin >> value;
-        status = mDepthGen.SetIntProperty( name.c_str(), value );
+        status = mDevice.SetIntProperty( name.c_str(), value );
         if ( XN_STATUS_OK == status ) {
             cout << "SetIntProperty success" << endl;
         } else {
@@ -41,7 +41,7 @@ int _tmain(int argc, _TCHAR* argv[])
         cout << "GetIntProperty --> name : ";
         cin >> name;
         cout << endl;
-        status = mDepthGen.GetIntProperty( name.c_str(), value );
+        status = mDevice.GetIntProperty( name.c_str(), value );
         if ( XN_STATUS_OK == status ) {
             cout << "IntProperty ( " << name << " ) = " << value << endl;
         } else {
@@ -51,8 +51,8 @@ int _tmain(int argc, _TCHAR* argv[])
     } else {
         cout << "Create depth generator fails!" << endl;
     }
-    mDepthGen.Release();
+    mDevice.Release();
     mContext.Release();
-	return 0;
+    return 0;
 }
 
