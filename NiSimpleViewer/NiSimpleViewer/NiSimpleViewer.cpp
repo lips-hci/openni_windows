@@ -76,7 +76,11 @@ void showResolution ( XnMapOutputMode* mapMode ) {
     } else if ( XN_1080P_X_RES == mapMode->nXRes && XN_1080P_Y_RES == mapMode->nYRes ) {
         cout << "1080P ( 1920 x 1080 ), FPS = " << mapMode->nFPS << endl;
     } else if ( XN_720P_X_RES == mapMode->nXRes && XN_720P_Y_RES == mapMode->nYRes ) {
-        cout << "720P ( 1280 x720 ), FPS = " << mapMode->nFPS << endl;
+        cout << "720P ( 1280 x 720 ), FPS = " << mapMode->nFPS << endl;
+    } else if ( 2592 == mapMode->nXRes && 1944 == mapMode->nYRes ) {
+        cout << "FHD ( 2592 x 1944 ), FPS = " << mapMode->nFPS << endl;
+    } else if ( 1280 == mapMode->nXRes && 960 == mapMode->nYRes ) {
+        cout << "960P ( 1280 x 960 ), FPS = " << mapMode->nFPS << endl;
     } else {
         cout << "Unknown ( " << mapMode->nXRes << " x " << mapMode->nYRes << " ), FPS = " << mapMode->nFPS << endl;
     }
@@ -240,12 +244,15 @@ int _tmain(int argc, _TCHAR* argv[])
 
     if ( option & DEPTH ) {
         mDepthGen.SetMapOutputMode( mapDepthOutputMode );
+        namedWindow( "Depth view", CV_WINDOW_NORMAL );
     }
     if ( option & IMAGE ) {
         mImageGen.SetMapOutputMode( mapImageOutputMode );
+        namedWindow( "Color view", CV_WINDOW_NORMAL );
     }
     if ( option & IR ) {
         mIrGen.SetMapOutputMode( mapIrOutputMode );
+        namedWindow( "IR view", CV_WINDOW_NORMAL );
     }
 
     mContext.StartGeneratingAll();
@@ -256,6 +263,7 @@ int _tmain(int argc, _TCHAR* argv[])
     bool quit = false;
     bool capture = false;
     bool showText = true;
+    bool fullScreen = false;
     vector<int> quality;
     quality.push_back(CV_IMWRITE_PNG_COMPRESSION);
     quality.push_back(0);
@@ -263,7 +271,15 @@ int _tmain(int argc, _TCHAR* argv[])
     {
         tStart = (double)getTickCount();
         mContext.WaitAndUpdateAll();
-
+        if ( fullScreen ) {
+            if ( option & DEPTH ) setWindowProperty( "Depth view", CV_WND_PROP_FULLSCREEN, CV_WINDOW_FULLSCREEN );
+            if ( option & IMAGE ) setWindowProperty( "Color view", CV_WND_PROP_FULLSCREEN, CV_WINDOW_FULLSCREEN );
+            if ( option & IR ) setWindowProperty( "IR view", CV_WND_PROP_FULLSCREEN, CV_WINDOW_FULLSCREEN );
+        } else {
+            if ( option & DEPTH ) setWindowProperty( "Depth view", CV_WND_PROP_FULLSCREEN, 0 );
+            if ( option & IMAGE ) setWindowProperty( "Color view", CV_WND_PROP_FULLSCREEN, 0 );
+            if ( option & IR ) setWindowProperty( "IR view", CV_WND_PROP_FULLSCREEN, 0 );
+        }
         if ( option & DEPTH ) {
             mDepthGen.GetMetaData( depthData );
             Mat imgDepth( depthData.FullYRes(), depthData.FullXRes(), CV_16UC1, ( void* )depthData.Data() );
@@ -338,6 +354,10 @@ int _tmain(int argc, _TCHAR* argv[])
             case 'F': // F = 70
             case 'f': // f = 102
                 showText = (showText)?false:true;
+                break;
+            case 'W':
+            case 'w':
+                fullScreen = (fullScreen)?false:true;
                 break;
             default:
                 break;
