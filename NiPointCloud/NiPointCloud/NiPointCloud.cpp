@@ -27,7 +27,7 @@ Mat computeCloud( const Mat depthMap,
     vector<Mat> output( 3 );
     output[0] = Mat( nsize, CV_32F );
     output[1] = Mat( nsize, CV_32F );
-    output[2] = depth;
+    output[2] = - depth;
 
     for ( int i = 0; i < nsize.width; i++ )
     {
@@ -38,7 +38,7 @@ Mat computeCloud( const Mat depthMap,
         output[1].row( j ) = j;
     }
 
-    float tmpx = 1.0 / fx;
+    float tmpx = - 1.0 / fx;
     float tmpy = 1.0 / fy;
     output[0] = ( output[0] - cx ).mul( output[2] ) * tmpx;
     output[1] = ( output[1] - cy ).mul( output[2] ) * tmpy;
@@ -81,21 +81,14 @@ int main()
 
     DepthMetaData mDepthMD;
 
-    while ( !xnOSWasKeyboardHit() )
+    while ( !mPCWindow.wasStopped() )
     {
         mContext.WaitOneUpdateAll( mDepthGen );
         mDepthGen.GetMetaData( mDepthMD );
 
         Mat imgDepth( mDepthMD.FullYRes(), mDepthMD.FullXRes(), CV_16UC1, ( void* )mDepthMD.Data() );
         Mat img8bitDepth;
-        Mat img8bit3ChDepth;
-        Mat img8bit3ChMask = Mat( mDepthMD.FullYRes(), mDepthMD.FullXRes(), CV_8UC3, Scalar( 0, 255, 255 ) );
         imgDepth.convertTo( img8bitDepth, CV_8U, 255.0 / 10000 );
-        cvtColor( img8bitDepth, img8bit3ChDepth, CV_GRAY2BGR );
-        bitwise_and( img8bit3ChDepth, img8bit3ChMask, img8bit3ChDepth );
-        putText( img8bit3ChDepth, string( "LIPS Corp Copyright 2017" ), Point( mDepthMD.FullXRes() / 32.0, mDepthMD.FullYRes() / 24.0 ), FONT_HERSHEY_SIMPLEX, mDepthMD.FullXRes() / 1280.0, Scalar( 200, 0, 0 ) );
-        imshow( "Depth view", img8bit3ChDepth );
-        waitKey( 1 );
 
         Mat mPointCloud = computeCloud( imgDepth, fx, fy, cx, cy );
         applyColorMap( img8bitDepth, img8bitDepth, COLORMAP_JET );

@@ -39,7 +39,7 @@ Mat computeCloud( const Mat depthMap,
     vector<Mat> output( 3 );
     output[0] = Mat( nsize, CV_32F );
     output[1] = Mat( nsize, CV_32F );
-    output[2] = depth;
+    output[2] = - depth;
 
     for ( int i = 0; i < nsize.width; i++ )
     {
@@ -50,7 +50,7 @@ Mat computeCloud( const Mat depthMap,
         output[1].row( j ) = j;
     }
 
-    float tmpx = 1.0 / fx;
+    float tmpx = - 1.0 / fx;
     float tmpy = 1.0 / fy;
     output[0] = ( output[0] - cx ).mul( output[2] ) * tmpx;
     output[1] = ( output[1] - cy ).mul( output[2] ) * tmpy;
@@ -127,7 +127,7 @@ int main( int argc, char* argv[] )
 
     mPCWindow.showWidget( "Coordinate Widget", viz::WCoordinateSystem( 400.0 ) );
 
-    while ( true )
+    while ( !mPCWindow.wasStopped() )
     {
         recvfrom( socket_fd, data1, PKT_SIZE + FID_SIZE, 0, ( struct sockaddr* )&server_addr, ( socklen_t * )&server_size );
         unsigned int offset = *data1 - 'A';
@@ -151,8 +151,6 @@ int main( int argc, char* argv[] )
                 Mat imgDepth( IMG_HEIGHT, IMG_WIDTH, CV_16UC1, ( void* )data_all );
                 Mat img8bitDepth;
                 imgDepth.convertTo( img8bitDepth, CV_8U, 255.0 / 4096.0 );
-                imshow( "Depth view", img8bitDepth );
-                waitKey( 1 );
                 Mat mPointCloud = computeCloud( imgDepth, fx, fy, cx, cy );
                 applyColorMap( img8bitDepth, img8bitDepth, COLORMAP_JET );
                 viz::WCloud pointCloud = viz::WCloud( mPointCloud, img8bitDepth );
