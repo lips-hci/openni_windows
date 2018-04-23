@@ -17,7 +17,6 @@
 #define IMG_WIDTH 640
 #define IMG_HEIGHT 480
 #define FID_SIZE 11
-#define SERIAL_NUM 20
 
 #if defined(COMPRESS)
 #define RDDATA_SIZE 210000
@@ -57,8 +56,8 @@ int main( int argc, char* argv[] )
     data = (char*)malloc((RDDATA_SIZE) * sizeof(char));
     dataAll = (char*)malloc((RDDATA_SIZE) * sizeof(char));
 #else
-    data = (char*)malloc((TOFWRDATA_SIZE + FID_SIZE + RGBWRDATA_SIZE + FID_SIZE + SERIAL_NUM) * sizeof(char));
-    dataAll = (char*)malloc((TOFWRDATA_SIZE + FID_SIZE + RGBWRDATA_SIZE + FID_SIZE + SERIAL_NUM) * sizeof(char));
+    data = (char*)malloc((TOFWRDATA_SIZE + FID_SIZE + RGBWRDATA_SIZE + FID_SIZE) * sizeof(char));
+    dataAll = (char*)malloc((TOFWRDATA_SIZE + FID_SIZE + RGBWRDATA_SIZE + FID_SIZE) * sizeof(char));
 #endif
 
 	iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
@@ -93,11 +92,11 @@ int main( int argc, char* argv[] )
     int err = 0;
     uzData = (Byte*)malloc((IMG_WIDTH * IMG_HEIGHT * 2) * sizeof(Byte));
 #else
-    int readLen = TOFWRDATA_SIZE + FID_SIZE + RGBWRDATA_SIZE + FID_SIZE + SERIAL_NUM;
+    int readLen = TOFWRDATA_SIZE + FID_SIZE + RGBWRDATA_SIZE + FID_SIZE;
 #endif
 
-    char TOFFIDStr[FID_SIZE] = {0};
-    char RGBFIDStr[FID_SIZE] = {0};
+    char TOFserialStr[FID_SIZE] = {0};
+    char RGBserialStr[FID_SIZE] = {0};
     int nbytes = 0;
     int readTotal = 0;
 
@@ -107,15 +106,15 @@ int main( int argc, char* argv[] )
         uLong len = 0;
         memset(uzData, 0, IMG_WIDTH * IMG_HEIGHT * 2);
 #endif
-        int TOFFIDNum = 0;
-        int RGBFIDNum = 0;
+        int TOFserialNum = 0;
+        int RGBserialNum = 0;
 
 #if defined(COMPRESS)
         nbytes = read(fd, data, RDDATA_SIZE);
 #else
 
         if (readLen >= nbytes)
-			nbytes = recv((int)fd, data, (TOFWRDATA_SIZE + FID_SIZE + RGBWRDATA_SIZE + FID_SIZE + SERIAL_NUM), 0);
+			nbytes = recv((int)fd, data, (TOFWRDATA_SIZE + FID_SIZE + RGBWRDATA_SIZE + FID_SIZE), 0);
         else
 			nbytes = recv((int)fd, data, readLen, 0);
 
@@ -129,24 +128,24 @@ int main( int argc, char* argv[] )
             memcpy(dataAll + readTotal, data, nbytes);
             readTotal = nbytes + readTotal;
 #else
-        } else if ((readTotal + nbytes) > (TOFWRDATA_SIZE + FID_SIZE + RGBWRDATA_SIZE + FID_SIZE + SERIAL_NUM)) {
+        } else if ((readTotal + nbytes) > (TOFWRDATA_SIZE + FID_SIZE + RGBWRDATA_SIZE + FID_SIZE)) {
             cout << "Data reading too much!!" << endl;
-            memcpy(dataAll + readTotal, data, (TOFWRDATA_SIZE + FID_SIZE + RGBWRDATA_SIZE + FID_SIZE + SERIAL_NUM - readTotal));
+            memcpy(dataAll + readTotal, data, (TOFWRDATA_SIZE + FID_SIZE + RGBWRDATA_SIZE + FID_SIZE - readTotal));
             {
-                memcpy(TOFFIDStr, dataAll, FID_SIZE);
-                memcpy(RGBFIDStr, dataAll + FID_SIZE + TOFWRDATA_SIZE, FID_SIZE);
-                TOFFIDNum = atoi(TOFFIDStr);
-                RGBFIDNum = atoi(RGBFIDStr);
-                cout << "TOF Frame ID = " << TOFFIDNum << ",  RGB Frame ID = " << RGBFIDNum << endl;
+                memcpy(TOFserialStr, dataAll, FID_SIZE);
+                memcpy(RGBserialStr, dataAll + FID_SIZE + TOFWRDATA_SIZE, FID_SIZE);
+                TOFserialNum = atoi(TOFserialStr);
+                RGBserialNum = atoi(RGBserialStr);
+                cout << "TOF Frame ID = " << TOFserialNum << ",  RGB Frame ID = " << RGBserialNum << endl;
                 showview(dataAll + FID_SIZE);
-                memset(dataAll, 0, (TOFWRDATA_SIZE + FID_SIZE + RGBWRDATA_SIZE + FID_SIZE + SERIAL_NUM));
+                memset(dataAll, 0, (TOFWRDATA_SIZE + FID_SIZE + RGBWRDATA_SIZE + FID_SIZE));
             }
             //cout << "nbytes = " << nbytes << ", readTotal = " << readTotal << endl;
-            memcpy(dataAll, data + (TOFWRDATA_SIZE + FID_SIZE + RGBWRDATA_SIZE + FID_SIZE + SERIAL_NUM - readTotal), nbytes - (TOFWRDATA_SIZE + FID_SIZE + RGBWRDATA_SIZE + FID_SIZE + SERIAL_NUM - readTotal));
-            readLen = TOFWRDATA_SIZE + FID_SIZE + RGBWRDATA_SIZE + FID_SIZE + SERIAL_NUM - (nbytes - (TOFWRDATA_SIZE + FID_SIZE + RGBWRDATA_SIZE + FID_SIZE + SERIAL_NUM - readTotal));
-            readTotal = nbytes - (TOFWRDATA_SIZE + FID_SIZE + RGBWRDATA_SIZE + FID_SIZE + SERIAL_NUM - readTotal);
+            memcpy(dataAll, data + (TOFWRDATA_SIZE + FID_SIZE + RGBWRDATA_SIZE + FID_SIZE - readTotal), nbytes - (TOFWRDATA_SIZE + FID_SIZE + RGBWRDATA_SIZE + FID_SIZE - readTotal));
+            readLen = TOFWRDATA_SIZE + FID_SIZE + RGBWRDATA_SIZE + FID_SIZE - (nbytes - (TOFWRDATA_SIZE + FID_SIZE + RGBWRDATA_SIZE + FID_SIZE - readTotal));
+            readTotal = nbytes - (TOFWRDATA_SIZE + FID_SIZE + RGBWRDATA_SIZE + FID_SIZE - readTotal);
 
-        } else if (nbytes != (TOFWRDATA_SIZE + FID_SIZE + RGBWRDATA_SIZE + FID_SIZE + SERIAL_NUM)) {
+        } else if (nbytes != (TOFWRDATA_SIZE + FID_SIZE + RGBWRDATA_SIZE + FID_SIZE)) {
             memcpy(dataAll + readTotal, data, nbytes);
             readLen -= nbytes;
             readTotal += nbytes;
@@ -161,17 +160,17 @@ int main( int argc, char* argv[] )
                 memcpy(data, dataAll, RDDATA_SIZE);
             }
 #else
-        if ((nbytes == (TOFWRDATA_SIZE + FID_SIZE + RGBWRDATA_SIZE + FID_SIZE + SERIAL_NUM)) || (readTotal == (TOFWRDATA_SIZE + FID_SIZE + RGBWRDATA_SIZE + FID_SIZE + SERIAL_NUM))) {
-            if (readTotal == (TOFWRDATA_SIZE + FID_SIZE + RGBWRDATA_SIZE + FID_SIZE + SERIAL_NUM))
-                memcpy(data, dataAll, (TOFWRDATA_SIZE + FID_SIZE + RGBWRDATA_SIZE + FID_SIZE + SERIAL_NUM));
+        if ((nbytes == (TOFWRDATA_SIZE + FID_SIZE + RGBWRDATA_SIZE + FID_SIZE)) || (readTotal == (TOFWRDATA_SIZE + FID_SIZE + RGBWRDATA_SIZE + FID_SIZE))) {
+            if (readTotal == (TOFWRDATA_SIZE + FID_SIZE + RGBWRDATA_SIZE + FID_SIZE))
+                memcpy(data, dataAll, (TOFWRDATA_SIZE + FID_SIZE + RGBWRDATA_SIZE + FID_SIZE));
 #endif
 
-            memcpy(TOFFIDStr, data, FID_SIZE);
-            memcpy(RGBFIDStr, dataAll + FID_SIZE + TOFWRDATA_SIZE, FID_SIZE);
-            TOFFIDNum = atoi(TOFFIDStr);
-            RGBFIDNum = atoi(RGBFIDStr);
+            memcpy(TOFserialStr, data, FID_SIZE);
+            memcpy(RGBserialStr, dataAll + FID_SIZE + TOFWRDATA_SIZE, FID_SIZE);
+            TOFserialNum = atoi(TOFserialStr);
+            RGBserialNum = atoi(RGBserialStr);
 
-            cout << "TOF Frame ID = " << TOFFIDNum << ",  RGB Frame ID = " << RGBFIDNum << endl;
+            cout << "TOF Frame ID = " << TOFserialNum << ",  RGB Frame ID = " << RGBserialNum << endl;
 
 #if defined(COMPRESS)
             memcpy(payload_size, data + FID_SIZE, PAYLOAD_SIZE - 1);
@@ -216,9 +215,9 @@ int main( int argc, char* argv[] )
 
             nbytes = 0;
             readTotal = 0;
-            readLen = TOFWRDATA_SIZE + FID_SIZE + RGBWRDATA_SIZE + FID_SIZE + SERIAL_NUM;
-            memset(dataAll, 0, (TOFWRDATA_SIZE + FID_SIZE + RGBWRDATA_SIZE + FID_SIZE + SERIAL_NUM));
-            memset(data, 0, (TOFWRDATA_SIZE + FID_SIZE + RGBWRDATA_SIZE + FID_SIZE + SERIAL_NUM));
+            readLen = TOFWRDATA_SIZE + FID_SIZE + RGBWRDATA_SIZE + FID_SIZE;
+            memset(dataAll, 0, (TOFWRDATA_SIZE + FID_SIZE + RGBWRDATA_SIZE + FID_SIZE));
+            memset(data, 0, (TOFWRDATA_SIZE + FID_SIZE + RGBWRDATA_SIZE + FID_SIZE));
 #endif
         }
     } 
